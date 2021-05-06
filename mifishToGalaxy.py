@@ -26,13 +26,15 @@ def create_taxonomy(mifish_data, taxonomy_information):
     taxonomy["Genus"] = [x[0] for x in taxonomy["Species"].str.split(" ")]
     taxonomy["Species"] = [x[1] for x in taxonomy["Species"].str.split(" ")]
 
-    taxonomy[["Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species", "mifish_species"]].to_excel(taxonomy_information, index=False)
+    taxonomy[["Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species", "Mifish species"]].to_excel(
+        taxonomy_information, index=False)
     print("Fish taxonomy is in", taxonomy_information, ". Please fill in taxonomic information")
     exit("Exiting after creating taxonomy file")
 
 # HERE IS THE MAIN SCRIPT WITH STEPS
 # First, read in an Excel file from mifish to Python
 mifish_data = pd.read_excel(mifish_file)
+mifish_data = mifish_data[mifish_data["Sample name"] != "Sample name"]
 
 # Load (or generate) taxonomic info file, depending on whether it exists
 if os.path.exists(taxonomy_information):
