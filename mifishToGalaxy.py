@@ -10,8 +10,6 @@ mifish_file = "mifish.xlsx"
 taxonomy_information = "fish_taxonomy.xlsx"
 # Set the name of the output .tax file for galaxy
 tax_file = "mifish.tax"
-# Set the name of the output .fasta file for galaxy
-fasta_file = "mifish.fasta"
 
 # THESE ARE FUNCTIONS YOU HOPEFULLY WON'T NEED TO CHANGE
 def create_taxonomy(mifish_data, taxonomy_information):
@@ -31,14 +29,6 @@ def create_taxonomy(mifish_data, taxonomy_information):
     taxonomy[["Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species", "mifish_species"]].to_excel(taxonomy_information, index=False)
     print("Fish taxonomy is in", taxonomy_information, ". Please fill in taxonomic information")
     exit("Exiting after creating taxonomy file")
-
-def create_fasta(mifish_data, fasta_file):
-    with open(fasta_file, "w") as outfile:
-        for index, row in mifish_data.iterrows():
-            seqID = row["Sample name"] + str(index)
-            seq = row["Sequence"]
-            outfile.write(">" + seqID + "\n" + seq + "\n\n")
-
 
 # HERE IS THE MAIN SCRIPT WITH STEPS
 # First, read in an Excel file from mifish to Python
@@ -79,7 +69,3 @@ if os.path.exists(taxonomy_information):
 else:
     # If the file doesn't exist, generate it.
     create_taxonomy(mifish_data, taxonomy_information)
-
-# Create the fasta file (should be quick!)
-create_fasta(mifish_data, fasta_file)
-
