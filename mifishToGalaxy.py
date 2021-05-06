@@ -7,12 +7,14 @@ import csv
 # Set the name of your mifish output file (this assume it's in the same directory (folder) as this script)
 mifish_file = "mifish.xlsx"
 # Set the name of the information about the taxonomy
-taxonomy_file = "fish_taxonomy.xlsx"
-# Set the name of the output (.tax) file for galaxy
-output_file = "mifish.tax"
+taxonomy_information = "fish_taxonomy.xlsx"
+# Set the name of the output .tax file for galaxy
+tax_file = "mifish.tax"
+# Set the name of the output .fasta file for galaxy
+fasta_file = "mifish.fasta"
 
-# THESE ARE FUNCTIONS YOU WON'T NEED TO CHANGE
-def create_taxonomy(mifish_data, taxonomy_file):
+# THESE ARE FUNCTIONS YOU HOPEFULLY WON'T NEED TO CHANGE
+def create_taxonomy(mifish_data, taxonomy_information):
     """The first thing you need to do is look up the species to provide information to Galaxy about where they fall
     in a phylogenetic tree. Let's make Python generate us a file that we can edit that contains all of the species
     identified"""
@@ -26,22 +28,30 @@ def create_taxonomy(mifish_data, taxonomy_file):
     taxonomy["Genus"] = [x[0] for x in taxonomy["Species"].str.split(" ")]
     taxonomy["Species"] = [x[1] for x in taxonomy["Species"].str.split(" ")]
 
-    taxonomy[["Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species", "mifish_species"]].to_excel(taxonomy_file, index=False)
-    print("Fish taxonomy is in", taxonomy_file, ". Please fill in taxonomic information")
+    taxonomy[["Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species", "mifish_species"]].to_excel(taxonomy_information, index=False)
+    print("Fish taxonomy is in", taxonomy_information, ". Please fill in taxonomic information")
     exit("Exiting after creating taxonomy file")
+
+def create_fasta(mifish_data, fasta_file):
+    with open(fasta_file, "w") as outfile:
+        for index, row in mifish_data.iterrows():
+            seqID = row["Sample name"] + str(index)
+            seq = row["Sequence"]
+            outfile.write(">" + seqID + "\n" + seq + "\n\n")
+
 
 # HERE IS THE MAIN SCRIPT WITH STEPS
 # First, read in an Excel file from mifish to Python
 mifish_data = pd.read_excel(mifish_file)
 
 # Load (or generate) taxonomic info file, depending on whether it exists
-if os.path.exists(taxonomy_file):
+if os.path.exists(taxonomy_information):
     # Check if the taxonomic information in the file is filled in
-    mifish_tax = pd.read_excel(taxonomy_file, na_filter = True)
+    mifish_tax = pd.read_excel(taxonomy_information, na_filter = True)
     if mifish_tax["Phylum"].isna().sum() > 0:
-        exit("Error: You still need to fill in the phylogenetic information in " + taxonomy_file)
+        exit("Error: You still need to fill in the phylogenetic information in " + taxonomy_information)
     else:
-        with open(output_file, "w") as outfile:
+        with open(tax_file, "w") as outfile:
             out_writer = csv.writer(outfile, delimiter="\t")
             # If the info is filled in, we can build our .tax file
             for index, row in mifish_data.iterrows():
@@ -63,13 +73,13 @@ if os.path.exists(taxonomy_file):
                                  species + "(70);"
                 else:
                     exit("Error! Confidence value not recognized: " + confidence)
-                print(tax_string)
+
                 # Write the output to a file in .tax format
                 out_writer.writerow([sample_name, tax_string])
-
 else:
     # If the file doesn't exist, generate it.
-    create_taxonomy(mifish_data, taxonomy_file)
+    create_taxonomy(mifish_data, taxonomy_information)
 
-# Taxonomy file: This file is formatted to show the sample name and then the taxonomic classification, like this
-# 794_HC2_R_001.fastq	Bacteria(100);Cyanobacteria_Chloroplast(98);Chloroplast(96);Chloroplast_order_incertae_sedis(96);Chloroplast(96);Bacillariophyta(88);
+# Create the fasta file (should be quick!)
+create_fasta(mifish_data, fasta_file)
+
