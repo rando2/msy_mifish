@@ -5,11 +5,11 @@ import csv
 
 # SET YOUR VARIABLES HERE
 # Set the name of your mifish output file (this assume it's in the same directory (folder) as this script)
-mifish_file = "mifish.xlsx"
+mifish_file = "MiFish Output 797 - 801.xlsx"
 # Set the name of the information about the taxonomy
-taxonomy_information = "fish_taxonomy.xlsx"
+taxonomy_information = "MiFish797_taxonomy.xlsx"
 # Set the name of the output .tax file for galaxy
-tax_file = "mifish.tax"
+tax_file = "MiFish797.tax"
 
 # THESE ARE FUNCTIONS YOU HOPEFULLY WON'T NEED TO CHANGE
 def create_taxonomy(mifish_data, taxonomy_information):
@@ -28,7 +28,7 @@ def create_taxonomy(mifish_data, taxonomy_information):
 
     taxonomy[["Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species", "Mifish species"]].to_excel(
         taxonomy_information, index=False)
-    print("Fish taxonomy is in", taxonomy_information, ". Please fill in taxonomic information")
+    print("Fish taxonomy is in", taxonomy_information, ". Please fill in taxonomic information, then rerun")
     exit("Exiting after creating taxonomy file")
 
 # HERE IS THE MAIN SCRIPT WITH STEPS

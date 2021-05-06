@@ -10,7 +10,7 @@ input_files = ["MiFish Output 797 - 801.xlsx"]
 fasta_file = "mifish797.fasta"
 
 # Provide the name you want for the output .count file that you need for galaxy
-count_file = "mifish797.count"
+count_file = "mifish797.count_table"
 
 # This section contains our functions (shouldn't need to edit)
 
@@ -72,5 +72,6 @@ for col in cols:
     count_table[col] = count_table[col].astype(int)
 
 # Last but not least, let's write the file!
+count_table.index.name = "Representative_Sequence"
 count_table.to_csv(count_file)
 
