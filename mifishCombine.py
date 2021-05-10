@@ -1,4 +1,6 @@
 import pandas as pd
+import csv
+import os
 
 # Draft code for combining files
 
@@ -9,6 +11,12 @@ input_files = ["MiFish Output 797 - 801.xlsx"]
 # Provide the name you want for the output .fasta file that you need for galaxy
 fasta_file = "mifish797.fasta"
 
+# Set the name of the information about the taxonomy
+taxonomy_information = "MiFish797_taxonomy.xlsx"
+
+# Set the name of the output .tax file for galaxy
+tax_file = "MiFish797.tax"
+
 # Provide the name you want for the output .count file that you need for galaxy
 count_file = "mifish797.count_table"
 
@@ -18,11 +26,42 @@ def create_fasta(mifish_data, fasta_file):
     namedSeq = dict()
     with open(fasta_file, "w") as outfile:
         for index, row in mifish_data.iterrows():
-            seqID = row["Sample name"] + "_" + str(index)
+            seqID = "Seq" + row["Sample name"] + "_" + str(index)
             seq = row["Sequence"]
-            outfile.write(">" + seqID + "\n" + seq + "\n\n")
+            outfile.write(">" + seqID + "\n" + seq + "\n")
             namedSeq[seq] = seqID
     return(namedSeq)
+
+def create_tax(namedData, tax_file, taxonomy_information):
+    if os.path.exists(taxonomy_information):
+        # Check if the taxonomic information in the file is filled in
+        mifish_tax = pd.read_excel(taxonomy_information, na_filter=True)
+        if mifish_tax["Phylum"].isna().sum() > 0:
+            exit("Error: You still need to fill in the phylogenetic information in " + taxonomy_information)
+
+        sequence_tax = dict()
+        # If the info is filled in, we can build our .tax file
+        for index, row in namedData.iterrows():
+            seqID = row["SeqID"]
+            confidence = row["Confidence"]
+            mifish_species = row["Species"]
+            tax_row = mifish_tax[mifish_tax['Mifish species'] == mifish_species].values[0]
+            kingdom, phylum, pclass, order, family, genus, species, mifish_species = tax_row
+            tax_string = kingdom + "(100);" + phylum + "(100);" + pclass + "(100);" + order + "(100);"
+            if confidence == "HIGH":
+                tax_string += family + "(100);" + genus + "(95);" + species + "(92);"
+            elif confidence == "MODERATE":
+                tax_string += family + "(97);" + genus + "(87);" + species + "(80);"
+            elif confidence == "LOW":
+                tax_string += family + "(92);" + genus + "(82);" + species + "(70);"
+            else:
+                exit("Error! Confidence value not recognized: " + confidence)
+
+            # Write the output to a file in .tax format
+            sequence_tax[seqID] = tax_string
+        taxDF = pd.DataFrame.from_dict(sequence_tax, orient="index")
+        taxDF.to_csv(tax_file, sep="\t")
+
 
 # This section contains the code that runs when you run the script
 
@@ -39,6 +78,9 @@ namedSeq = pd.DataFrame.from_dict(create_fasta(uniqueSeqDF, fasta_file), orient=
 
 # Add the sequence names to the rest of the data
 namedData = allData.join(pd.DataFrame(namedSeq), on = "Sequence")
+
+# Create the .tax file
+create_tax(namedData, tax_file, taxonomy_information)
 
 # Count how many times each sequence occurs per sample
 groupedData = namedData.groupby(['Sample name', "SeqID"]).size()
@@ -74,4 +116,3 @@ for col in cols:
 # Last but not least, let's write the file!
 count_table.index.name = "Representative_Sequence"
 count_table.to_csv(count_file)
-
